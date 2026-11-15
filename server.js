@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
 import path from 'node:path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { isTikTokUrl } from './src/url-helper.js';
 import { resolveTikTokMedia } from './src/scraper.js';
@@ -17,10 +18,18 @@ export function createApp() {
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
-  app.use(express.static(path.join(__dirname, 'public')));
+
+  // Static files (local dev & fallback)
+  const publicDir = path.join(__dirname, 'public');
+  if (fs.existsSync(publicDir)) {
+    app.use(express.static(publicDir));
+  }
+
+  // Router for API endpoints (handles both with and without /api prefix)
+  const apiRouter = express.Router();
 
   // Analyze TikTok URL
-  app.post('/api/analyze', async (req, res) => {
+  apiRouter.post('/analyze', async (req, res) => {
     const { url } = req.body || {};
 
     if (!url || typeof url !== 'string' || !url.trim()) {
@@ -42,9 +51,8 @@ export function createApp() {
     try {
       const media = await resolveTikTokMedia(trimmedUrl);
       
-      const safeId = media.id.replace(/[^a-zA-Z0-9_-]/g, '') || Date.now().toString();
+      const safeId = media.id ? media.id.replace(/[^a-zA-Z0-9_-]/g, '') : Date.now().toString();
 
-      // Build proxy URLs so downloads and previews work reliably without CORS or expired tokens
       const proxyDownloadUrls = {
         videoHd: media.videoHd ? `/api/download?url=${encodeURIComponent(media.videoHd)}&filename=tiktok_${safeId}_hd.mp4` : null,
         videoSd: media.videoSd ? `/api/download?url=${encodeURIComponent(media.videoSd)}&filename=tiktok_${safeId}_sd.mp4` : null,
@@ -74,7 +82,7 @@ export function createApp() {
   });
 
   // Stream Proxy (Supports Range headers for video/audio player scrubbing)
-  app.get('/api/stream', async (req, res) => {
+  apiRouter.get('/stream', async (req, res) => {
     const targetUrl = req.query.url;
 
     if (!targetUrl || typeof targetUrl !== 'string') {
@@ -100,7 +108,6 @@ export function createApp() {
         validateStatus: (status) => status >= 200 && status < 400
       });
 
-      // Forward relevant streaming headers
       if (streamRes.headers['content-type']) {
         res.setHeader('Content-Type', streamRes.headers['content-type']);
       }
@@ -128,7 +135,7 @@ export function createApp() {
   });
 
   // Direct File Downloader Proxy
-  app.get('/api/download', async (req, res) => {
+  apiRouter.get('/download', async (req, res) => {
     const targetUrl = req.query.url;
     const customFilename = req.query.filename || `tiktok_${Date.now()}.mp4`;
 
@@ -136,7 +143,6 @@ export function createApp() {
       return res.status(400).json({ success: false, message: 'URL media wajib disertakan' });
     }
 
-    // Sanitize filename to prevent header injection
     const safeFilename = customFilename.replace(/[^a-zA-Z0-9._-]/g, '_');
 
     try {
@@ -172,9 +178,28 @@ export function createApp() {
     }
   });
 
-  // Fallback for SPA routing to index.html
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  // Mount API router to both /api and / so it works seamlessly on Vercel and local
+  app.use('/api', apiRouter);
+  app.use('/', apiRouter);
+
+  // Fallback for SPA routing to index.html if file exists (local dev)
+  app.get('*', (req, res, next) => {
+    const indexPath = path.join(publicDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+    next();
+  });
+
+  // Global error handler
+  app.use((err, req, res, next) => {
+    console.error('Unhandled server error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        message: err.message || 'Internal server error'
+      });
+    }
   });
 
   return app;
