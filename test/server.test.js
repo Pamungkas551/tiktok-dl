@@ -58,4 +58,28 @@ describe('server API', () => {
       assert.match(json.message, /URL media wajib disertakan/i);
     });
   });
+
+  describe('Static files serving', () => {
+    it('serves index.html at root', async () => {
+      const res = await fetch(`${baseUrl}/`);
+      assert.equal(res.status, 200);
+      const text = await res.text();
+      assert.match(text, /TIKTOK\.DL/);
+      assert.match(text, /Space\+Grotesk/);
+    });
+
+    it('serves style.css', async () => {
+      const res = await fetch(`${baseUrl}/style.css`);
+      assert.equal(res.status, 200);
+      const text = await res.text();
+      assert.match(text, /--shadow: 5px 5px 0 0 #000000;/);
+    });
+
+    it('serves app.js', async () => {
+      const res = await fetch(`${baseUrl}/app.js`);
+      assert.equal(res.status, 200);
+      const text = await res.text();
+      assert.match(text, /tiktok_dl_history_v1/);
+    });
+  });
 });

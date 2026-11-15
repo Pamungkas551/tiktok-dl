@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TikTok Downloader - Neubrutalism MP3 & MP4 HD</title>
+  <meta name="description" content="Downloader video TikTok tanpa watermark HD dan audio MP3 cepat dengan arsitektur multi-fallback.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="site-wrapper">
+    <header class="site-header">
+      <div class="brand-box">
+        <span class="brand-title">TIKTOK.DL</span>
+      </div>
+      <div class="status-badge" aria-label="Status Server: Aktif">
+        <span class="status-indicator"></span>
+        <span class="status-text">MULTI-ENGINE READY</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="hero-section">
+        <h1 class="hero-title">UNDUH VIDEO & AUDIO TIKTOK</h1>
+        <p class="hero-subtitle">Kualitas HD asli tanpa watermark dan audio MP3 jernih. Langsung tersimpan ke perangkat tanpa iklan tipuan.</p>
+
+        <form id="download-form" class="input-card" novalidate>
+          <label for="tiktok-url" class="field-label">TEMPEL TAUTAN VIDEO TIKTOK:</label>
+          <div class="input-group">
+            <input 
+              type="url" 
+              id="tiktok-url" 
+              name="url" 
+              class="nb-input" 
+              placeholder="Contoh: https://vt.tiktok.com/ZSxyz... atau https://www.tiktok.com/@user/video/..." 
+              required
+              autocomplete="off"
+              spellcheck="false"
+            >
+          </div>
+          <div class="action-buttons-row">
+            <button type="button" id="btn-paste" class="nb-btn btn-secondary">
+              <span class="btn-text">TEMPEL LINK</span>
+            </button>
+            <button type="button" id="btn-clear" class="nb-btn btn-ghost">
+              <span class="btn-text">BERSIHKAN</span>
+            </button>
+            <button type="submit" id="btn-submit" class="nb-btn btn-primary">
+              <span class="btn-text">AMBIL MEDIA</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Dynamic Content Area -->
+      <section id="display-area" class="display-container" aria-live="polite">
+        
+        <!-- State 1: Empty Guide State -->
+        <div id="state-empty" class="state-block">
+          <div class="card-empty">
+            <h2 class="section-heading">FORMAT TAUTAN YANG DIDUKUNG</h2>
+            <div class="guide-grid">
+              <div class="guide-item">
+                <span class="guide-badge">01</span>
+                <h3 class="guide-title">Link Aplikasi (Pendek)</h3>
+                <p class="guide-desc">Tautan dari tombol bagikan di aplikasi TikTok mobile (vt.tiktok.com atau vm.tiktok.com).</p>
+              </div>
+              <div class="guide-item">
+                <span class="guide-badge">02</span>
+                <h3 class="guide-title">Link Browser (Penuh)</h3>
+                <p class="guide-desc">Tautan dari address bar peramban web (tiktok.com/@username/video/nomor_id).</p>
+              </div>
+              <div class="guide-item">
+                <span class="guide-badge">03</span>
+                <h3 class="guide-title">Foto & Slideshow</h3>
+                <p class="guide-desc">Postingan carousel foto TikTok dapat diunduh per slide beserta audio latar musiknya.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- State 2: Loading State -->
+        <div id="state-loading" class="state-block is-hidden">
+          <div class="card-loading">
+            <div class="loading-spinner-box">
+              <div class="nb-spinner" aria-hidden="true"></div>
+            </div>
+            <h2 class="loading-title">MEMPROSES DATA MEDIA</h2>
+            <p id="loading-status-text" class="loading-desc">Menghubungi server TikTok dan mencari stream kualitas tertinggi...</p>
+          </div>
+        </div>
+
+        <!-- State 3: Error State -->
+        <div id="state-error" class="state-block is-hidden">
+          <div class="card-error">
+            <div class="error-badge">ERROR</div>
+            <h2 id="error-title" class="error-heading">GAGAL MENGAMBIL VIDEO</h2>
+            <p id="error-message" class="error-desc">Pastikan URL yang dimasukkan benar, video berstatus publik, dan tidak dibatasi negara.</p>
+            <button type="button" id="btn-retry" class="nb-btn btn-primary">
+              <span class="btn-text">COBA LAGI</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- State 4: Result Card State -->
+        <div id="state-result" class="state-block is-hidden">
+          <div class="card-result">
+            <!-- Author info header -->
+            <div class="result-header">
+              <img id="res-avatar" src="" alt="Avatar kreator TikTok" class="author-avatar" width="64" height="64" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'64\' height=\'64\'><rect width=\'64\' height=\'64\' fill=\'%23FFD23F\'/><text x=\'50%25\' y=\'55%25\' font-size=\'24\' font-weight=\'bold\' text-anchor=\'middle\' dominant-baseline=\'middle\' fill=\'%23000\'>TT</text></svg>'">
+              <div class="author-meta">
+                <h3 id="res-nickname" class="author-name">Nama Kreator</h3>
+                <span id="res-uniqueid" class="author-handle">@username</span>
+                <span id="res-provider" class="provider-pill">SERVER: TIKWM</span>
+              </div>
+            </div>
+
+            <!-- Title & Caption -->
+            <p id="res-title" class="media-caption">Deskripsi video TikTok</p>
+
+            <!-- Video & Audio Preview Players -->
+            <div class="preview-layout">
+              <div id="video-preview-wrapper" class="player-box">
+                <span class="player-tag">PRATINJAU VIDEO</span>
+                <video id="res-video-player" class="nb-video" controls preload="metadata" playsinline></video>
+              </div>
+
+              <div id="audio-preview-wrapper" class="audio-box">
+                <span class="player-tag">PRATINJAU AUDIO</span>
+                <audio id="res-audio-player" class="nb-audio" controls preload="metadata"></audio>
+              </div>
+            </div>
+
+            <!-- Slideshow Image Container (if photos) -->
+            <div id="slideshow-wrapper" class="slideshow-box is-hidden">
+              <span class="player-tag">SLIDE FOTO DITEMUKAN (<span id="slide-count">0</span> FOTO)</span>
+              <div id="slideshow-grid" class="slide-grid"></div>
+            </div>
+
+            <!-- Action Buttons for Download -->
+            <div class="download-actions">
+              <a id="btn-dl-hd" href="#" class="nb-btn btn-success" download>
+                <span class="btn-main">UNDUH MP4 HD</span>
+                <span class="btn-sub">Kualitas Tertinggi Tanpa Watermark</span>
+              </a>
+              <a id="btn-dl-sd" href="#" class="nb-btn btn-secondary" download>
+                <span class="btn-main">UNDUH MP4 STANDAR</span>
+                <span class="btn-sub">Ukuran File Lebih Ringan</span>
+              </a>
+              <a id="btn-dl-mp3" href="#" class="nb-btn btn-accent" download>
+                <span class="btn-main">UNDUH AUDIO MP3</span>
+                <span class="btn-sub">Format Musik Suara Jernih</span>
+              </a>
+            </div>
+
+            <div class="reset-row">
+              <button type="button" id="btn-reset" class="nb-btn btn-ghost">
+                <span class="btn-text">UNDUH VIDEO LAINNYA</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- History Section (Stored in localStorage) -->
+      <section id="history-section" class="history-container is-hidden">
+        <div class="history-card">
+          <div class="history-header">
+            <h2 class="history-title">RIWAYAT UNDUHAN TERAKHIR</h2>
+            <button type="button" id="btn-clear-history" class="nb-btn btn-small btn-ghost">
+              <span>HAPUS SEMUA</span>
+            </button>
+          </div>
+          <ul id="history-list" class="history-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-content">
+        <p class="footer-text">TikTok Downloader: Neubrutalism Architecture.</p>
+        <p class="footer-subtext">Menggunakan multi-engine fallback dan direct streaming proxy. Tanpa database luar, tanpa pelacak data pribadi.</p>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
